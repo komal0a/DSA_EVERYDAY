@@ -1,0 +1,122 @@
+3518. Smallest Palindromic Rearrangement II
+class Solution {
+public:
+    static const int LIMIT = 1000000;
+
+    vector<int> spf;
+    vector<int> primeId;
+    vector<int> primes;
+
+    void addFactors(vector<int>& expo, int x, int sign) {
+        while (x > 1) {
+            int p = spf[x];
+            expo[primeId[p]] += sign;
+            x /= p;
+        }
+    }
+
+    int value(vector<int>& expo) {
+        long long ans = 1;
+        for (int i = 0; i < (int)primes.size(); i++) {
+            int e = expo[i];
+            while (e--) {
+                ans *= primes[i];
+                if (ans >= LIMIT) return LIMIT;
+            }
+        }
+        return (int)ans;
+    }
+
+    string smallestPalindrome(string s, int k) {
+        vector<int> freq(26);
+
+        for (char c : s)
+            freq[c - 'a']++;
+
+        vector<int> cnt(26);
+        char mid = 0;
+        int rem = 0;
+
+        for (int i = 0; i < 26; i++) {
+            cnt[i] = freq[i] / 2;
+            rem += cnt[i];
+            if (freq[i] & 1)
+                mid = char('a' + i);
+        }
+
+        // SPF
+        spf.resize(rem + 1);
+        for (int i = 0; i <= rem; i++)
+            spf[i] = i;
+
+        for (int i = 2; i * i <= rem; i++)
+            if (spf[i] == i)
+                for (int j = i * i; j <= rem; j += i)
+                    if (spf[j] == j)
+                        spf[j] = i;
+
+        primeId.assign(rem + 1, -1);
+
+        for (int i = 2; i <= rem; i++)
+            if (spf[i] == i) {
+                primeId[i] = primes.size();
+                primes.push_back(i);
+            }
+
+        vector<int> expo(primes.size(), 0);
+
+        // rem!
+        for (int i = 2; i <= rem; i++)
+            addFactors(expo, i, +1);
+
+        // divide by cnt!
+        for (int c : cnt)
+            for (int i = 2; i <= c; i++)
+                addFactors(expo, i, -1);
+
+        if (value(expo) < k)
+            return "";
+
+        string left;
+
+        while (rem) {
+
+            for (int ch = 0; ch < 26; ch++) {
+
+                if (!cnt[ch]) continue;
+
+                // simulate choosing ch
+
+                addFactors(expo, rem, -1);
+                addFactors(expo, cnt[ch], +1);
+
+                cnt[ch]--;
+                rem--;
+
+                int ways = value(expo);
+
+                if (ways >= k) {
+                    left.push_back(char('a' + ch));
+                    break;
+                }
+
+                // undo
+                k -= ways;
+
+                cnt[ch]++;
+                rem++;
+
+                addFactors(expo, cnt[ch], -1);
+                addFactors(expo, rem, +1);
+            }
+        }
+
+        string right = left;
+        reverse(right.begin(), right.end());
+
+        if (mid)
+            return left + string(1, mid) + right;
+
+        return left + right;
+    }
+};
