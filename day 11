@@ -1,0 +1,18 @@
+3345. Smallest Divisible Digit Product I
+class Solution {
+public:
+    int smallestNumber(int n, int t) {
+        // int cnt=n;
+        while(true){
+            int temp=1;
+            int var=n;
+            while(var){
+                temp*=var%10;
+                var/=10;
+            }
+            if(temp%t ==0)return n;
+            n++;
+        }
+        return 0;
+    }
+};
