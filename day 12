@@ -1,0 +1,223 @@
+3348. Smallest Divisible Digit Product II
+class Solution {
+    using State = array<int, 4>; // exponents of 2,3,5,7
+
+    // contribution of each digit
+    vector<State> fac = {
+        {0,0,0,0}, // 0
+        {0,0,0,0}, // 1
+        {1,0,0,0}, // 2
+        {0,1,0,0}, // 3
+        {2,0,0,0}, // 4
+        {0,0,1,0}, // 5
+        {1,1,0,0}, // 6
+        {0,0,0,1}, // 7
+        {3,0,0,0}, // 8
+        {0,2,0,0}  // 9
+    };
+
+    // Minimum number of digits required to satisfy
+    // exponents of 2 and 3.
+    int dp[50][35];
+
+    State reduceNeed(State need, int digit) {
+        for (int j = 0; j < 4; j++) {
+            need[j] = max(0, need[j] - fac[digit][j]);
+        }
+        return need;
+    }
+
+    int minDigits(State need) {
+        // Each factor 5 requires one digit 5.
+        // Each factor 7 requires one digit 7.
+        return need[2] + need[3] + dp[need[0]][need[1]];
+    }
+
+    // Build lexicographically smallest suffix of given length
+    // that can satisfy `need`.
+    string buildSuffix(int len, State need) {
+        if (minDigits(need) > len)
+            return "";
+
+        string ans;
+
+        for (int pos = 0; pos < len; pos++) {
+            int remaining = len - pos - 1;
+
+            for (int d = 1; d <= 9; d++) {
+                State next = reduceNeed(need, d);
+
+                if (minDigits(next) <= remaining) {
+                    ans.push_back('0' + d);
+                    need = next;
+                    break;
+                }
+            }
+        }
+
+        if (need[0] || need[1] || need[2] || need[3])
+            return "";
+
+        return ans;
+    }
+
+public:
+    string smallestNumber(string num, long long t) {
+
+        // --------------------------------
+        // Step 1: Prime factorize t
+        // --------------------------------
+
+        State target = {0, 0, 0, 0};
+
+        int primes[4] = {2, 3, 5, 7};
+
+        for (int i = 0; i < 4; i++) {
+            while (t % primes[i] == 0) {
+                target[i]++;
+                t /= primes[i];
+            }
+        }
+
+        // Contains some prime other than 2,3,5,7
+        if (t != 1)
+            return "-1";
+
+
+        // --------------------------------
+        // Step 2: DP for factors 2 and 3
+        // --------------------------------
+
+        const int INF = 1e9;
+
+        for (int i = 0; i < 50; i++) {
+            for (int j = 0; j < 35; j++) {
+                dp[i][j] = INF;
+            }
+        }
+
+        dp[0][0] = 0;
+
+        // Only digits contributing factors 2/3.
+        vector<int> digits = {2, 3, 4, 6, 8, 9};
+
+        for (int a = 0; a < 50; a++) {
+            for (int b = 0; b < 35; b++) {
+
+                if (a == 0 && b == 0)
+                    continue;
+
+                for (int d : digits) {
+
+                    int na = max(0, a - fac[d][0]);
+                    int nb = max(0, b - fac[d][1]);
+
+                    dp[a][b] = min(
+                        dp[a][b],
+                        1 + dp[na][nb]
+                    );
+                }
+            }
+        }
+
+
+        int n = num.size();
+
+
+        // --------------------------------
+        // Step 3: Store requirement before
+        // each position
+        // --------------------------------
+
+        vector<State> needBefore(n + 1);
+
+        needBefore[0] = target;
+
+        vector<bool> prefixZero(n + 1, false);
+
+        for (int i = 0; i < n; i++) {
+
+            prefixZero[i + 1] =
+                prefixZero[i] || (num[i] == '0');
+
+            if (num[i] == '0') {
+                needBefore[i + 1] = needBefore[i];
+            }
+            else {
+                needBefore[i + 1] =
+                    reduceNeed(needBefore[i], num[i] - '0');
+            }
+        }
+
+
+        // --------------------------------
+        // Step 4: num itself works
+        // --------------------------------
+
+        State finalNeed = needBefore[n];
+
+        if (!prefixZero[n] &&
+            finalNeed[0] == 0 &&
+            finalNeed[1] == 0 &&
+            finalNeed[2] == 0 &&
+            finalNeed[3] == 0) {
+
+            return num;
+        }
+
+
+        // --------------------------------
+        // Step 5: Try changing a digit
+        // from RIGHT to LEFT
+        // --------------------------------
+
+        for (int i = n - 1; i >= 0; i--) {
+
+            // Prefix num[0...i-1] must be zero-free.
+            if (prefixZero[i])
+                continue;
+
+            State before = needBefore[i];
+
+            int current = num[i] - '0';
+
+            // Increase this digit
+            for (int d = max(1, current + 1); d <= 9; d++) {
+
+                State after = reduceNeed(before, d);
+
+                int remaining = n - i - 1;
+
+                if (minDigits(after) <= remaining) {
+
+                    string suffix =
+                        buildSuffix(remaining, after);
+
+                    if ((int)suffix.size() != remaining)
+                        continue;
+
+                    string answer =
+                        num.substr(0, i);
+
+                    answer.push_back('0' + d);
+
+                    answer += suffix;
+
+                    return answer;
+                }
+            }
+        }
+
+
+        // --------------------------------
+        // Step 6: Need a longer number
+        // --------------------------------
+
+        int len = n + 1;
+
+        while (minDigits(target) > len)
+            len++;
+
+        return buildSuffix(len, target);
+    }
+};
