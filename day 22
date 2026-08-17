@@ -1,0 +1,54 @@
+1563. Stone Game V
+
+class Solution {
+public:
+    int solve(vector<int>&arr,int l,int r,vector<vector<int>>&dp,vector<int>&pre){
+        if(l==r){
+            return 0;
+        }
+        if(dp[l][r]!=-1)return dp[l][r];
+        
+   // Try every possible split
+   int ans=0;
+        for(int index = l; index < r; index++) {
+
+        // int left=pre[index+1]-pre[l];
+        // int right=pre[r+1]-pre[index+1];
+
+            int left = pre[index + 1] - pre[l];
+            int right = pre[r + 1] - pre[index + 1];
+
+            if(left < right) {
+
+                ans = max(ans,
+                          left + solve(arr, l, index, dp, pre));
+
+            }
+            else if(right < left) {
+
+                ans = max(ans,
+                          right + solve(arr, index + 1, r, dp, pre));
+
+            }
+            else {
+
+                ans = max(ans,
+                          left + max(
+                              solve(arr, l, index, dp, pre),
+                              solve(arr, index + 1, r, dp, pre)
+                          ));
+            }
+        }
+        return dp[l][r]=ans;
+    }
+    int stoneGameV(vector<int>& stoneValue) {
+        int n=stoneValue.size();
+        vector<int>pre_sum(n+1,0);
+        // pre_sum[0]=stoneValue[0];
+        for(int i=0;i<stoneValue.size();i++){
+            pre_sum[i+1]=pre_sum[i]+stoneValue[i];
+        }
+        vector<vector<int>>dp(n,vector<int>(n,-1));
+        return solve(stoneValue,0,n-1,dp,pre_sum);
+    }
+};
