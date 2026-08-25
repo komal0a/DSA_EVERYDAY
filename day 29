@@ -1,0 +1,18 @@
+
+3718. Smallest Missing Multiple of K
+class Solution {
+public:
+    int missingMultiple(vector<int>& nums, int k) {
+        vector<int>vec(101,0);
+        for(int i:nums){
+            vec[i]=i;
+        }
+        int m=1;
+        while(true){
+            if(vec[k*m] ==0)return k*m;
+
+            m++;
+        }
+        return 0;
+    }
+};
