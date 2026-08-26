@@ -1,0 +1,47 @@
+2904. Shortest and Lexicographically Smallest Beautiful String
+class Solution {
+public:
+    string shortestBeautifulSubstring(string s, int k) {
+        vector<string>vec;
+
+        int l=0; int r=0;
+        // string temp="";
+        int n=s.length();
+        int mini=INT_MAX;
+        int cnt=0;
+        while(r<n){
+            if(s[r]=='1')cnt++;
+            while(l<=r && cnt>k){
+                if(s[l]=='1')cnt--;
+                // temp-=s[l];
+                l++;
+            }
+            if(cnt==k){
+                while(s[l]=='0')l++;
+            string temp=s.substr(l,r-l+1);
+
+            if(mini>r-l+1){
+                vec.clear();
+                vec.push_back(temp);
+                mini=r-l+1;
+            }else if(mini==r-l+1)vec.push_back(temp);
+            }
+           r++;
+            
+        }
+
+        //now we have all the strings of smallest length where numberof '1'==k
+
+        //now we have to smallest lexo string
+
+        string ans="";
+       if(vec.empty())return ans;
+
+       ans=vec[0];
+       for(int i=1; i<vec.size();i++){
+        if(ans>vec[i])ans=vec[i];
+       }
+        return ans;
+    }
+
+};
