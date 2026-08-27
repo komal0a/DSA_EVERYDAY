@@ -1,0 +1,80 @@
+3720. Lexicographically Smallest Permutation Greater Than Target
+class Solution {
+public:
+    string lexGreaterPermutation(string s, string target) {
+         int n = s.size();
+
+        // Count characters in s
+        vector<int> freq(26, 0);
+        for (char c : s) {
+            freq[c - 'a']++;
+        }
+
+        // Try to make the answer greater at position i,
+        // starting from the right.
+        for (int i = n - 1; i >= 0; i--) {
+
+            // We need the prefix [0...i-1] to be exactly target.
+            // Remove target[i-1] while moving left.
+            if (i < n) {
+                // At this point freq represents characters available
+                // after matching target[0...i].
+            }
+
+            // Build frequency fresh for this position
+            vector<int> f(26, 0);
+            for (char c : s)
+                f[c - 'a']++;
+
+            bool possible = true;
+
+            // Use target[0...i-1]
+            for (int j = 0; j < i; j++) {
+                int x = target[j] - 'a';
+
+                if (f[x] == 0) {
+                    possible = false;
+                    break;
+                }
+
+                f[x]--;
+            }
+
+            if (!possible)
+                continue;
+
+            // At position i, choose the smallest character > target[i]
+            int x = target[i] - 'a';
+            int bigger = -1;
+
+            for (int c = x + 1; c < 26; c++) {
+                if (f[c] > 0) {
+                    bigger = c;
+                    break;
+                }
+            }
+
+            if (bigger == -1)
+                continue;
+
+            string ans = target.substr(0, i);
+
+            // Make it strictly greater here
+            ans += char('a' + bigger);
+            f[bigger]--;
+
+            // Smallest possible suffix
+            for (int c = 0; c < 26; c++) {
+                while (f[c] > 0) {
+                    ans += char('a' + c);
+                    f[c]--;
+                }
+            }
+
+            return ans;
+        }
+
+        return "";
+    
+    }
+};
