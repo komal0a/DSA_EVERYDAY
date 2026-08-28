@@ -1,0 +1,153 @@
+3734. Lexicographically Smallest Palindromic Permutation Greater Than Target
+class Solution {
+public:
+    string makePalindrome(string half, char middle) {
+        string ans = half;
+
+        if (middle != '#')
+            ans += middle;
+
+        for (int i = (int)half.size() - 1; i >= 0; i--)
+            ans += half[i];
+
+        return ans;
+    }
+
+    string lexPalindromicPermutation(string s, string target) {
+
+        int n = s.size();
+
+        // Count characters
+        vector<int> cnt(26, 0);
+
+        for (char c : s)
+            cnt[c - 'a']++;
+
+        // Check whether palindrome is possible
+        int odd = 0;
+        char middle = '#';
+
+        for (int i = 0; i < 26; i++) {
+            if (cnt[i] % 2) {
+                odd++;
+                middle = 'a' + i;
+            }
+        }
+
+        if (odd > 1)
+            return "";
+
+        // Characters available for first half
+        vector<int> halfCnt(26);
+
+        for (int i = 0; i < 26; i++)
+            halfCnt[i] = cnt[i] / 2;
+
+        int m = n / 2;
+
+
+        // ---------------------------------------------------
+        // STEP 1:
+        // Try first half exactly equal to target's first half
+        // ---------------------------------------------------
+
+        string half;
+
+        bool possibleEqual = true;
+
+        vector<int> temp = halfCnt;
+
+        for (int i = 0; i < m; i++) {
+
+            int x = target[i] - 'a';
+
+            if (temp[x] == 0) {
+                possibleEqual = false;
+                break;
+            }
+
+            half += target[i];
+            temp[x]--;
+        }
+
+        if (possibleEqual) {
+
+            string p = makePalindrome(half, middle);
+
+            // This also handles the odd-length case,
+            // where the middle character can make it greater.
+            if (p > target)
+                return p;
+        }
+
+
+        // ---------------------------------------------------
+        // STEP 2:
+        // Make the first half greater than target's first half
+        //
+        // IMPORTANT:
+        // Start from RIGHT to LEFT.
+        // ---------------------------------------------------
+
+        for (int i = m - 1; i >= 0; i--) {
+
+            // We want target[0 ... i-1] to remain equal.
+            vector<int> rem = halfCnt;
+
+            bool prefixPossible = true;
+
+            for (int j = 0; j < i; j++) {
+
+                int x = target[j] - 'a';
+
+                if (rem[x] == 0) {
+                    prefixPossible = false;
+                    break;
+                }
+
+                rem[x]--;
+            }
+
+            if (!prefixPossible)
+                continue;
+
+
+            // At position i, choose the smallest
+            // character greater than target[i].
+            int targetChar = target[i] - 'a';
+
+            for (int c = targetChar + 1; c < 26; c++) {
+
+                if (rem[c] == 0)
+                    continue;
+
+                string candidate;
+
+                // Keep prefix equal to target
+                candidate = target.substr(0, i);
+
+                // Make current position greater
+                candidate += char('a' + c);
+
+                rem[c]--;
+
+                // Fill remaining positions as small as possible
+                for (int x = 0; x < 26; x++) {
+                    candidate += string(
+                        rem[x],
+                        char('a' + x)
+                    );
+                }
+
+                string p = makePalindrome(candidate, middle);
+
+                if (p > target)
+                    return p;
+
+                rem[c]++;
+            }
+        }
+
+        return "";
+    }
+};
