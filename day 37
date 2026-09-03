@@ -1,0 +1,29 @@
+3876. Construct Uniform Parity Array II
+class Solution {
+public:
+    bool uniformArray(vector<int>& nums1) {
+          int smallestOdd = INT_MAX;
+
+        // Find the smallest odd number
+        for (int x : nums1) {
+            if (x % 2 == 1) {
+                smallestOdd = min(smallestOdd, x);
+            }
+        }
+
+        // No odd numbers -> all are already even
+        if (smallestOdd == INT_MAX) {
+            return true;
+        }
+
+        // Every even number must be greater than
+        // the smallest odd number
+        for (int x : nums1) {
+            if (x % 2 == 0 && x < smallestOdd) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
