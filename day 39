@@ -1,0 +1,111 @@
+class Solution {
+public:
+    struct State {
+        long long score;
+        vector<int> indices;
+    };
+
+    // Return the better state:
+    // 1. Higher score
+    // 2. If score is equal, lexicographically smaller indices
+    State better(const State& a, const State& b) {
+        if (a.score != b.score)
+            return (a.score > b.score) ? a : b;
+
+        if (lexicographical_compare(
+                a.indices.begin(), a.indices.end(),
+                b.indices.begin(), b.indices.end()))
+            return a;
+
+        return b;
+    }
+
+    vector<int> maximumWeight(vector<vector<int>>& intervals) {
+        int n = intervals.size();
+
+        // {left, right, weight, original_index}
+        vector<array<long long, 4>> arr;
+
+        for (int i = 0; i < n; i++) {
+            arr.push_back({
+                intervals[i][0],
+                intervals[i][1],
+                intervals[i][2],
+                i
+            });
+        }
+
+        // Sort by starting position
+        sort(arr.begin(), arr.end(),
+             [](const auto& a, const auto& b) {
+                 return a[0] < b[0];
+             });
+
+        // Store all starting positions for binary search
+        vector<long long> starts(n);
+
+        for (int i = 0; i < n; i++)
+            starts[i] = arr[i][0];
+
+        // next[i] = first interval whose start > arr[i].right
+        vector<int> nxt(n);
+
+        for (int i = 0; i < n; i++) {
+            nxt[i] =
+                upper_bound(starts.begin(), starts.end(), arr[i][1])
+                - starts.begin();
+        }
+
+        /*
+            dp[i][k]:
+
+            Starting from sorted interval i,
+            what is the best answer if we can choose
+            at most k intervals?
+        */
+        vector<vector<State>> dp(n + 1, vector<State>(5));
+
+        // Base case:
+        // no intervals left -> score 0, indices empty
+        for (int k = 0; k <= 4; k++) {
+            dp[n][k] = {0, {}};
+        }
+
+        // If we can choose 0 intervals,
+        // answer is always empty.
+        for (int i = 0; i <= n; i++) {
+            dp[i][0] = {0, {}};
+        }
+
+        // Fill DP backwards
+        for (int i = n - 1; i >= 0; i--) {
+
+            for (int k = 1; k <= 4; k++) {
+
+                // OPTION 1: Don't take interval i
+                State skip = dp[i + 1][k];
+
+                // OPTION 2: Take interval i
+                State take = dp[n][0];
+
+                take.score =
+                    arr[i][2] + dp[nxt[i]][k - 1].score;
+
+                take.indices =
+                    dp[nxt[i]][k - 1].indices;
+
+                // Add current interval's original index
+                take.indices.push_back((int)arr[i][3]);
+
+                // We need indices in increasing order
+                sort(take.indices.begin(), take.indices.end());
+
+                // Pick maximum score,
+                // and lexicographically smallest on tie
+                dp[i][k] = better(skip, take);
+            }
+        }
+
+        return dp[0][4].indices;
+    }
+};
